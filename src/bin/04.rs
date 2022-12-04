@@ -3,6 +3,20 @@ struct Assignment {
     end: u32
 }
 
+impl Assignment {
+    fn encompasses(&self, other: &Assignment) -> bool {
+        (self.start <= other.start && self.end >= other.end)
+        || (other.start <= self.start && other.end >= self.end)
+    }
+
+    fn overlaps(&self, other: &Assignment) -> bool {
+        (self.start <= other.start && self.end >= other.end)
+            || (other.start <= self.start && other.end >= self.end)
+            || (self.end >= other.end && self.start <= other.end)
+            || (other.end >= self.start && other.start <= self.end)
+    }
+}
+
 fn parse_elf_pairs(input: &str) -> Vec<(Assignment, Assignment)> {
     input.lines()
             .into_iter()
@@ -27,15 +41,12 @@ fn parse_elf_pairs(input: &str) -> Vec<(Assignment, Assignment)> {
 
 pub fn part_one(input: &str) -> Option<u32> {
     let elf_pairs: Vec<(Assignment, Assignment)> = parse_elf_pairs(input);
-        
 
-    let mut result = 0;
-    for (elf_a, elf_b) in elf_pairs {
-        if (elf_a.start <= elf_b.start && elf_a.end >= elf_b.end)
-            || (elf_b.start <= elf_a.start && elf_b.end >= elf_a.end) {
-            result += 1
-        }
-    }
+    let result: u32 = elf_pairs
+        .iter()
+        .fold(0, |acc, (elf_a, elf_b)| {
+            if elf_a.encompasses(elf_b) { acc + 1 } else { acc }
+        });
 
     Some(result)
 }
@@ -43,15 +54,10 @@ pub fn part_one(input: &str) -> Option<u32> {
 pub fn part_two(input: &str) -> Option<u32> {
     let elf_pairs: Vec<(Assignment, Assignment)> = parse_elf_pairs(input);
 
-    let mut result = 0;
-    for (elf_a, elf_b) in elf_pairs {
-        if (elf_a.start <= elf_b.start && elf_a.end >= elf_b.end)
-            || (elf_b.start <= elf_a.start && elf_b.end >= elf_a.end)
-            || (elf_a.end >= elf_b.end && elf_a.start <= elf_b.end)
-            || (elf_b.end >= elf_a.start && elf_b.start <= elf_a.end) {
-            result += 1
-        }
-    }
+    let result: u32 = elf_pairs
+        .iter()
+        .map(| (elf_a, elf_b) | elf_a.overlaps(elf_b))
+        .fold(0, | acc, v | if v { acc + 1 } else { acc });
 
     Some(result)
 }
